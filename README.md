@@ -16,7 +16,6 @@ The `camera` module uses `gphoto2` to capture images from a compatible USB-conne
 
 The payload hardware features a small [HIH-4030](http://sensing.honeywell.com/index.php?ci_id=3108&la_id=1&pr_id=53969) analog humidity monitor that is mounted to the outside of the package.
 
-![HIH-4030](http://sensing.honeywell.com/client_asset/document/5/3/9/5/1/document_89163838-01CC-8275-3EEB29E5D4C1D387.jpg)
 
 #### 1-Wire temperature monitors ####
 
@@ -33,3 +32,7 @@ The firmware polls an ADXL335 analog 3-axis accelerometer for acceleration data 
 #### GPS ####
 
 We support a serial-connected GPS.  Note that for high-altitude applications, you need to ensure that your GPS will function above 18 km in altitude.  Most do not.
+
+### Getting started ###
+
+The software may or may not be of use to you as-is without the same hardware as I'm using; but you can be the judge of that.  At a minimum, you can look at the drivers, protocols, etc. to see how I solved the various problems.
