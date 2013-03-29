@@ -337,7 +337,7 @@ while 1:
 			m = re.search(slpPattern, option)
 			if m != None:
 				P = int(hw.readPressure())/100
-				slp = calculateSLP(P,m.group(1),m.group(2))
+				slp = menu.calculateSLP(P,m.group(1),m.group(2))
 				print "%0.2f" % slp
 			else:
 				try:
