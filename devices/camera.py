@@ -36,7 +36,6 @@ class Camera:
         procname = HELPER_SCRIPT_PATH
         proc = subprocess.Popen([procname],stdout=subprocess.PIPE,shell=True)
         (out,err) = proc.communicate()
-        #print "OUTPUT = %s END" % out
         matches = self.imgregex.findall(out)
         if matches != None:
             if len(matches) != 0:
