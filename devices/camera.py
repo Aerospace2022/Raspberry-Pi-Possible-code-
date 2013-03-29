@@ -3,16 +3,16 @@
 """ camera module """
 
 """ The camera module allows the flight computer to capture photographs from
-        a USB-connected digital camera and store them in a filesystem location
-        designated at initialization.
-        
-        To create a new instance of the class, caminstance = camera.Camera('path_to_writable_img_store')
-        
-        To capture an image: caminstance.captureimage() when the image is captured it will be returned
-        downloaded from the camera into the path designated at initialization and will be renamed
-        with a timestamp.
-        
-        NOTE: This module requires a helper shell script 'captphoto.sh'
+                a USB-connected digital camera and store them in a filesystem location
+                designated at initialization.
+                
+                To create a new instance of the class, caminstance = camera.Camera('path_to_writable_img_store')
+                
+                To capture an image: caminstance.captureimage() when the image is captured it will be returned
+                downloaded from the camera into the path designated at initialization and will be renamed
+                with a timestamp.
+                
+                NOTE: This module requires a helper shell script 'captphoto.sh'
 
 """
 import subprocess
@@ -23,6 +23,7 @@ import shutil
 from os import rename
 
 HELPER_SCRIPT_PATH = '/var/www/webpy/scripts/captphoto.sh'
+CAMERA_NAME = 'Canon PowerShot G6'
 
 class Camera:
     def __init__(self,path):
@@ -48,8 +49,12 @@ class Camera:
                     print 'ERROR | %s old = %s and new = %s' % (err,oldname,newname)
                 finally:
                     return
-            
+    
     def isavailable(self):
         """ returns True if the camera is available, False if not"""
-        return True
-                        
+        proc = subprocess.Popen(['gphoto2 --summary'], stdout=subprocess.PIPE,shell=True)
+        (out,err) = proc.communicate()
+        if len(out) > 2000:
+            return True
+        else:
+            return False
