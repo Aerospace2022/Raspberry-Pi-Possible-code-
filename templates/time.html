@@ -1,0 +1,43 @@
+$def with (info)
+
+<style type="text/css">
+
+    p.quote {
+            font-size: x-large;
+            font-family: "Donegal One", sans-serif;
+    }
+
+    p.author {
+            color: #cdcdcd;
+            font-size: large;
+            font-family: Rambla, sans-serif;
+    }
+
+    p.source {
+            color: #dbdbdb;
+            font-style: italic;
+            font-size: large;
+            font-family: Rambla;
+    }
+    p.resource {
+        font-size: medium;
+        font-family: Rambla, sans-serif;
+    }
+
+    a.resource {
+        color: #2790b5;
+    }
+
+
+</style>
+
+<link href='http://fonts.googleapis.com/css?family=Donegal+One' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Rambla:400,400italic' rel='stylesheet' type='text/css'>
+    
+<body>
+    <p class="quote">Raspberry Pi says the time is $info['hr']:$info['min']:$info['sec'] UTC</p>
+    <p class="author">Time is being kept by a DS1307 RTC connected to RPi by I2C bus.<p>
+    <br />
+    <p class="source">I2c - RPi - web.py integration by Alan Duncan</p>
+    <p class="source">Web page rendered by web.py framework by Aaron Swartz</p>
+</body>
