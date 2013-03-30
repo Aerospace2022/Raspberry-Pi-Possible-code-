@@ -397,6 +397,7 @@ while 1:
                 if len(gpsalts) > ALTITUDE_STACK_SIZE:
                     gpsalts.popleft()
             if epochtime - gpslistentime > 2:
+                """ if we've already listened for two seconds then redirect back to APRS"""
                 gpsredirect = GPSRedirect.APRS
                 """ switch the multiplexer to the APRS """
                 hw.gpio.output('B',6,0)
