@@ -40,6 +40,17 @@ class Hardware:
         if DEBUG:
             print """INFO | initializing external GPIO (MCP23017 @ 0x%x""" % (I2C_ADDRESS_MCP23017,)
         self.gpio = mcp2300x.MCP23017(I2C_ADDRESS_MCP23017)
+        
+        """ configure the external GPIO """
+        MCP23017Direction = mcp2300x.MCP230XXDirection.OUTPUT
+        for pin in range(8):
+            self.gpio.config('A',pin,MCP23017Direction)
+            self.gpio.config('B',pin,MCP23017Direction)
+            
+        if DEBUG:
+            print """INFO | set GPS serial redirect to APSR"""
+        self.gpio.output('B',6,0)
+        self.gpio.output('B',7,0)
 
         """ configure 1-wire temp sensors """
         if DEBUG:
@@ -48,10 +59,7 @@ class Hardware:
         self.extTemp = ds18xx.DS18XX(DSDeviceFamily,DS18B20_ID_EXTERNAL)
         self.intTemp = ds18xx.DS18XX(DSDeviceFamily,DS18B20_ID_INTERNAL)
 
-        """ configure the external GPIO """
-        MCP23017Direction = mcp2300x.MCP230XXDirection.OUTPUT
-        for pin in range(8):
-            self.gpio.config('A',pin,MCP23017Direction)
+        
 
         """ configure the ADC """
         if DEBUG:
@@ -150,6 +158,9 @@ class Menu:
         inner = 1 - (scaledHeight/bottomSum)
         innerRaised = inner ** -5.257
         return P * innerRaised
+    
+class GPSRedirect:
+    (CPU,APRS) = range(2)
 
 print """WELCOME TO HELIUM VERSION %s\n""" % (HELIUM_VERSION,)
 print """The time is %s UTC""" % utcclock.datetime.today()
@@ -157,6 +168,7 @@ cpu = CPU()
 hw = Hardware()
 menu = Menu()
 db = DB()
+gpsredirect = GPSRedirect.APRS
 mode = HeliumMode.ModePreflight         # begin in preflight mode
 gpsalts = deque([])                                     # gps altitudes
 sensoralts = deque([])                          # sensor altitudes
@@ -184,6 +196,7 @@ trkmag = 0
 gpstime = utcclock.datetime.today()
 satcount = 0
 quality = 0
+
 
 """ MENU HANDLERS """
 
@@ -246,6 +259,7 @@ def measureIntTemp():
 now = utcclock.datetime.now()
 ept = (time.mktime(now.timetuple()))
 epochtime = 0
+gpslistentime = 0
 
 def extTempMonitorService():
     """     service the exterior temperature monitor """
@@ -311,6 +325,12 @@ def saveGPSData():
         sys.exit(1)
     finally:
         con.close()
+        
+def listenToGPS():
+    self.gpio.output('B',6,1)
+    self.gpio.output('B',7,0)
+    """ we'll listen for 2 seconds then allow the APRS tracker to listen for the remaining 8 seconds """
+    gpslistentime = epochtime
 
 """ capture image from the camera and store on USB stick in separate thread """
 def captureImage():
@@ -327,7 +347,8 @@ serviceevents = [ {'interval':15, 'time':0,     'vector' : extTempMonitorService
                                   {'interval':15, 'time':ept+4, 'vector' : bmpMonitorService},
                                   {'interval':60, 'time':0,     'vector' : captureImage},
                                   {'interval':12, 'time':ept+5, 'vector' : saveSensorData},
-                                  {'interval':5,  'time':ept+2, 'vector' : saveGPSData}
+                                  {'interval':5,  'time':ept+2, 'vector' : saveGPSData,
+                                   'interval':10, 'time':ept+6, 'vector' : listenToGPS,}
                                 ]
 
 while 1:
@@ -361,17 +382,24 @@ while 1:
                 event['time'] = epochtime
 
         """ service the GPS every pass through the run loop"""
-        hw.gps.readline()
-        if hw.gps.lastMessage.sentenceType == 'VTG':
-            trkangle = hw.gps.lastMessage.trueTrack
-            trkmag = hw.gps.lastMessage.magneticTrack
-            kts = hw.gps.lastMessage.groundSpeedKnots
-        elif hw.gps.lastMessage.sentenceType == 'GGA':
-            latitude = hw.gps.lastMessage.fix.latitude
-            longitude = hw.gps.lastMessage.fix.longitude
-            altitude = hw.gps.lastMessage.altitude
-            gpsalts.append(altitude)
-            if len(gpsalts) > ALTITUDE_STACK_SIZE:
-                gpsalts.popleft()
+        if gpsredirect == GPSRedirect.CPU:
+            """ we're listening to the GPS serial currently"""
+            hw.gps.readline()
+            if hw.gps.lastMessage.sentenceType == 'VTG':
+                trkangle = hw.gps.lastMessage.trueTrack
+                trkmag = hw.gps.lastMessage.magneticTrack
+                kts = hw.gps.lastMessage.groundSpeedKnots
+            elif hw.gps.lastMessage.sentenceType == 'GGA':
+                latitude = hw.gps.lastMessage.fix.latitude
+                longitude = hw.gps.lastMessage.fix.longitude
+                altitude = hw.gps.lastMessage.altitude
+                gpsalts.append(altitude)
+                if len(gpsalts) > ALTITUDE_STACK_SIZE:
+                    gpsalts.popleft()
+            if epochtime - gpslistentime > 2:
+                gpsredirect = GPSRedirect.APRS
+                """ switch the multiplexer to the APRS """
+                hw.gpio.output('B',6,0)
+                hw.gpio.outout('B',7,0)
 
             #adctemp = hw.adc.readChannel(0x3F)
