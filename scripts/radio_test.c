@@ -46,13 +46,13 @@ static void print_usage(const char *prog)
 	printf("Usage: %s [-FfHMmCENDVSr]\n", prog);
 	puts(   " -p --aprs\t\tset transmit frequency to US APSR (144.39)\n"
             " -F --freq\t\tset freq as 32 bit binary in Hz (little endian)\n"
-			" -M --rmem		read freq from memory loc\n"
-			" -m --wmem		write active freq to memory loc\n"
-			" -N --qname	read device name\n"
-			" -D --qdate	read datecode\n"
-			" -V --qvers	read software version\n"
-			" -S --qser		read serial number\n"
-			" -r --qfreq	read minimum and maximum freqs"
+			" -M --rmem\tread freq from memory loc\n"
+			" -m --wmem\twrite active freq to memory loc\n"
+			" -N --qname\tread device name\n"
+			" -D --qdate\tread datecode\n"
+			" -V --qvers\tread software version\n"
+			" -S --qser\tread serial number\n"
+			" -r --qfreq\tread minimum and maximum freqs"
 		);
 	exit(1);
 }
