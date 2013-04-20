@@ -164,6 +164,11 @@ class GPSRedirect:
 
 print """WELCOME TO HELIUM VERSION %s\n""" % (HELIUM_VERSION,)
 print """The time is %s UTC""" % utcclock.datetime.today()
+#radio = i2c.I2C(address = 0x48)
+#radio.bus.write_i2c_block_data(0x48,1,)
+#radio.write8(0x51, 0x54)
+#print radio.readS8(0x48)
+
 cpu = CPU()
 hw = Hardware()
 menu = Menu()
@@ -260,6 +265,8 @@ now = utcclock.datetime.now()
 ept = (time.mktime(now.timetuple()))
 epochtime = 0
 gpslistentime = 0
+
+
 
 def extTempMonitorService():
     """     service the exterior temperature monitor """

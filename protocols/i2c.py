@@ -32,7 +32,7 @@ class I2C:
             if (self.debug):
                 print("I2C: Wrote 0x%02X to register 0x%02X" % (value, reg))
         except IOError, err:
-            self._printWarning()
+            self._printWarning(reg)
             return -1
   
     def writeList(self, reg, list):
@@ -40,7 +40,7 @@ class I2C:
         try:
             self.bus.write_i2c_block_data(self.address, reg, list)
         except IOError, err:
-            self._printWarning()
+            self._printWarning(reg)
             return -1
         
     def readList(self, reg, length):
@@ -62,7 +62,7 @@ class I2C:
                 print "I2C: Device 0x%02X returned 0x%02X from reg 0x%02X" % (self.address, result & 0xFF, reg)
             return result
         except IOError, err:
-            self._printWarning()
+            self._printWarning(reg)
             return -1
   
     def readS8(self, reg):
@@ -76,7 +76,7 @@ class I2C:
             else:
                 return result
         except IOError, err:
-            self_printWarning()
+            self._printWarning(reg)
             return -1
   
     def readU16(self, reg):
@@ -88,7 +88,7 @@ class I2C:
                 print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
             return result
         except IOError, err:
-            self._printWarning()
+            self._printWarning(reg)
             return -1
   
     def readS16(self, reg):
@@ -102,9 +102,11 @@ class I2C:
                 print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
             return result
         except IOError, err:
-            self._printWarning()
+            self._printWarning(reg)
             print err
             return -1
         
-    def _printWarning(self):
-        print "Error accessing 0x%02X: Check your I2C address and reg 0x%02X" % (self.address,reg)
+    def _printWarning(self,reg):
+        print self.address
+        print reg
+        print """Error accessing 0x%02X: Check your I2C address and reg 0x%02X""" % (self.address,reg)
