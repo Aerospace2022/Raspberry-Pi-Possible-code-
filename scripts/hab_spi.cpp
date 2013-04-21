@@ -1,4 +1,4 @@
-#inlucd "hab_spi.h"
+#include "hab_spi.h"
 #include <bcm2835.h>
 
 HABSPI::HABSPI(HAB_SPI_CS aCS, uint8_a A = RPI_V2_GPIO_P1_18, uint8_t B = RPI_V2_GPIO_P1_22) {
