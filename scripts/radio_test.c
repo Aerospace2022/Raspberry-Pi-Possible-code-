@@ -11,6 +11,25 @@
  * Cross-compile with cross-gcc -I/path/to/cross-kernel/include
  */
 
+/*
+ *	Hardware setup
+ *
+ *	The default hardware setup requires integration between CE0 and two
+ *	other GPIO pins on the Raspberry Pi, namely GPIO 24 and GPIO 25,
+ *	which occupy pins 18 and 22 on the rev2 board main connector
+ *	GPIO 24 -> input A of a 74HC139 multiplexer (pin 2)
+ *	GPIO 25 -> input B of the multiplexer (pin 3)
+ *	CE0 -> G of the the multiplexer (pin 1)
+ *	Radio chip select is CSB.
+ *	CSB => Y1
+ *
+ *	So in order to send a message over SPI, we have to bracket those
+ *	calls by raising and lowering the correct combination of GPIO 24 and
+ *	GPIO 25.  From the datasheet, in order to lower Y1, we much raise
+ *	input A (GPIO24) and lower input B (BPIO25)
+ *
+*/
+
 #include <stdint.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -57,6 +76,24 @@ static void print_usage(const char *prog)
 	exit(1);
 }
 
+static void raise_auxillary_pins(void)
+{
+    bcm2835_gpio_write(RPI_V2_GPIO_P1_18,LOW);                     // GPIO24 low
+    bcm2835_gpio_write(RPI_V2_GPIO_P1_22,HIGH);                    // GPIO25 high
+}
+
+static void lower_auxillary_pins(void)
+{
+    bcm2835_gpio_write(RPI_V2_GPIO_P1_18,LOW);                     // GPIO24 low
+    bcm2835_gpio_write(RPI_V2_GPIO_P1_22,LOW);                    // GPIO25 low
+}
+
+static void setup_gpio(void)
+{
+    bcm2835_gpio_fsel(RPI_V2_GPIO_P1_18,BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(RPI_V2_GPIO_P1_22,BCM2835_GPIO_FSEL_OUTP);
+}
+
 /*	Writes data to the radio with array of length */
 static uint8_t write_radio(uint8_t *data, uint8_t *rd_buf, uint8_t length) {
     uint8_t *wr_buf = malloc(MESSAGE_LENGTH * sizeof(uint8_t));
@@ -67,12 +104,14 @@ static uint8_t write_radio(uint8_t *data, uint8_t *rd_buf, uint8_t length) {
 	int ret = 0;
     
     #if XFR_USE_BCM2835_LIB
+        raise_auxillary_pins();
         bcm2835_spi_begin();
         bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);      // The default
         bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);                   // The default
         bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_4096);
         bcm2835_spi_chipSelect(BCM2835_SPI_CS0);                      // The default
         bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW);      // the default
+        //  transfer
         bcm2835_spi_transfernb(wr_buf,rd_buf,MESSAGE_LENGTH);
         bcm2835_spi_end();
         
@@ -80,6 +119,8 @@ static uint8_t write_radio(uint8_t *data, uint8_t *rd_buf, uint8_t length) {
         bcm2835_spi_begin();
         bcm2835_spi_transfernb(wr_buf,rd_buf,MESSAGE_LENGTH);
         bcm2835_spi_end();
+        
+        lower_auxillary_pins();
     #else
         int fd = open(device, O_RDWR);
         if( fd < 0 ) pabort("unable to open device");
