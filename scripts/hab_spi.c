@@ -4,29 +4,31 @@ static hab_spi_cs_t _cs = HAB_SPI_CSA;
 static uint8_t _pinA = RPI_V2_GPIO_P1_18;
 static uint8_t _pinB = RPI_V2_GPIO_P1_22;
 
+aux_cs_t aux = { .cs = HAB_SPI_CSA, .pinA = RPI_V2_GPIO_P1_18, .pinB = RPI_V2_GPIO_P1_22 };
+
 void hab_spi_set_cs(hab_spi_cs_t aCS) {
-    _cs = aCS;
+    aux.cs = aCS;
 }
 
 hab_spi_cs_t hab_spi_cs(void) {
-    return _cs;
+    return aux.cs;
 }
 
 void hab_spi_set_aux_gpio(uint8_t pinA, uint8_t pinB) {
-    _pinA = pinA;
-    _pinB = pinB;
+    aux.pinA = pinA;
+    aux.pinB = pinB;
     
     //  make these outputs
-    bcm2835_gpio_fsel(_pinA,BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(_pinB,BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(aux.pinA, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(aux.pinB, BCM2835_GPIO_FSEL_OUTP);
 }
 
 uint8_t hab_spi_aux_gpio_A(void) {
-    return _pinA;
+    return aux.pinA;
 }
 
 uint8_t hab_spi_aux_gpio_B(void) {
-    return _pinB;
+    return aux.pinB;
 }
 
 void hab_spi_lower_cs(void) {
@@ -51,11 +53,11 @@ void hab_spi_lower_cs(void) {
             break;
         }
     }
-    bcm2835_gpio_write(_pinA,a);
-    bcm2835_gpio_write(_pinB,b);
+    bcm2835_gpio_write(aux.pinA, a);
+    bcm2835_gpio_write(aux.pinB, b);
 }
 
 void hab_spi_raise_cs(void) {
-    bcm2835_gpio_write(_pinA,LOW);
-    bcm2835_gpio_write(_pinB,LOW);
+    bcm2835_gpio_write(aux.pinA, LOW);
+    bcm2835_gpio_write(aux.pinB, LOW);
 }
